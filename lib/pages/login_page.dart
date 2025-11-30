@@ -31,59 +31,39 @@ class _LoginPageState
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final _authService = AuthService();
+
   bool loading = false;
   bool showPassword = false;
 
   // ==============================================================
-  // =================== CUSTOM SNACKBAR ==========================
+  // ======================== Snackbars ===========================
   // ==============================================================
+
   void showError(
     String message,
   ) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(
-      SnackBar(
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        content: Container(
-          padding: const EdgeInsets.all(
-            14,
-          ),
-          decoration: BoxDecoration(
-            color: Colors.redAccent.shade700,
-            borderRadius: BorderRadius.circular(
-              12,
-            ),
-          ),
-          child: Row(
-            children: [
-              const Icon(
-                Icons.error_outline,
-                color: Colors.white,
-              ),
-              const SizedBox(
-                width: 12,
-              ),
-              Expanded(
-                child: Text(
-                  message,
-                  style: const TextStyle(
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+    _showSnack(
+      message,
+      Colors.redAccent.shade700,
+      Icons.error_outline,
     );
   }
 
   void showSuccess(
     String message,
   ) {
+    _showSnack(
+      message,
+      Colors.green.shade700,
+      Icons.check_circle_outline,
+    );
+  }
+
+  void _showSnack(
+    String message,
+    Color color,
+    IconData icon,
+  ) {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(
@@ -96,15 +76,15 @@ class _LoginPageState
             14,
           ),
           decoration: BoxDecoration(
-            color: Colors.green.shade700,
+            color: color,
             borderRadius: BorderRadius.circular(
               12,
             ),
           ),
           child: Row(
             children: [
-              const Icon(
-                Icons.check_circle_outline,
+              Icon(
+                icon,
                 color: Colors.white,
               ),
               const SizedBox(
@@ -126,8 +106,9 @@ class _LoginPageState
   }
 
   // ==============================================================
-  // ================ TRANSLATE ERROR FIREBASE ====================
+  // ================== Firebase Error Handler ====================
   // ==============================================================
+
   String firebaseError(
     String code,
   ) {
@@ -148,15 +129,16 @@ class _LoginPageState
   }
 
   // ==============================================================
-  // ============== REDIRECT BERDASARKAN ROLE =====================
+  // =================== Redirect by Role =========================
   // ==============================================================
+
   Future<
     void
   >
   _redirectByRole(
     String uid,
   ) async {
-    DocumentSnapshot userDoc = await FirebaseFirestore.instance
+    final userDoc = await FirebaseFirestore.instance
         .collection(
           'users',
         )
@@ -172,48 +154,36 @@ class _LoginPageState
       return;
     }
 
-    String role =
+    final role =
         userDoc['role'] ??
         "user";
 
+    Widget nextPage;
     if (role ==
         "admin") {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder:
-              (
-                _,
-              ) => const AdminPage(),
-        ),
-      );
+      nextPage = const AdminPage();
     } else if (role ==
         "teacher") {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder:
-              (
-                _,
-              ) => const TeacherPage(),
-        ),
-      );
+      nextPage = const TeacherPage();
     } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder:
-              (
-                _,
-              ) => const DashboardUser(),
-        ),
-      );
+      nextPage = const DashboardUser();
     }
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder:
+            (
+              _,
+            ) => nextPage,
+      ),
+    );
   }
 
   // ==============================================================
-  // ===================== LOGIN EMAIL ============================
+  // ====================== Login Email ===========================
   // ==============================================================
+
   Future<
     void
   >
@@ -221,7 +191,6 @@ class _LoginPageState
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
 
-    // Validasi sederhana
     if (email.isEmpty)
       return showError(
         "Email tidak boleh kosong.",
@@ -231,9 +200,8 @@ class _LoginPageState
         "Password tidak boleh kosong.",
       );
 
-    // Validasi format email
     final emailRegex = RegExp(
-      r"^[^@]+@[^@]+\.[^@]+",
+      r"^[^@]+@[^@]+\.[^@]+$",
     );
     if (!emailRegex.hasMatch(
       email,
@@ -253,8 +221,7 @@ class _LoginPageState
         password: password,
       );
 
-      User? user = FirebaseAuth.instance.currentUser;
-
+      final user = FirebaseAuth.instance.currentUser;
       if (user ==
           null) {
         showError(
@@ -278,7 +245,7 @@ class _LoginPageState
         ),
       );
     } catch (
-      e
+      _
     ) {
       showError(
         "Terjadi kesalahan. Silakan coba lagi.",
@@ -291,8 +258,9 @@ class _LoginPageState
   }
 
   // ==============================================================
-  // ====================== LOGIN GOOGLE ==========================
+  // ======================= Login Google =========================
   // ==============================================================
+
   Future<
     void
   >
@@ -302,7 +270,7 @@ class _LoginPageState
     );
 
     try {
-      UserCredential cred = await _authService.loginWithGoogle();
+      final cred = await _authService.loginWithGoogle();
       showSuccess(
         "Berhasil masuk dengan Google!",
       );
@@ -318,7 +286,7 @@ class _LoginPageState
         ),
       );
     } catch (
-      e
+      _
     ) {
       showError(
         "Gagal masuk dengan Google.",
@@ -331,8 +299,9 @@ class _LoginPageState
   }
 
   // ==============================================================
-  // ====================== WIDGET INPUT ==========================
+  // ======================= Input Widget =========================
   // ==============================================================
+
   Widget _input({
     required String hint,
     required TextEditingController controller,
@@ -371,219 +340,239 @@ class _LoginPageState
   }
 
   // ==============================================================
-  // ========================== UI ================================
+  // =========================== UI ===============================
   // ==============================================================
+
   @override
   Widget build(
     BuildContext context,
   ) {
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color(
-                0xFF89A7C2,
+      body: Stack(
+        children: [
+          // ================= MAIN UI =================
+          Container(
+            width: double.infinity,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Color(
+                    0xFF89A7C2,
+                  ),
+                  Color(
+                    0xFF1E3C72,
+                  ),
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
               ),
-              Color(
-                0xFF1E3C72,
-              ),
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 24,
-              vertical: 40,
             ),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight: MediaQuery.of(
-                  context,
-                ).size.height,
-              ),
-              child: IntrinsicHeight(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircleAvatar(
-                      radius: 65,
-                      backgroundColor: const Color(
-                        0xFF002F6C,
-                      ),
-                      child: Image.asset(
-                        'assets/images/bisaa.png',
-                        height: 60,
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 40,
-                    ),
-
-                    Text(
-                      "Masuk",
-                      style: GoogleFonts.poppins(
-                        fontSize: 22,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 25,
-                    ),
-
-                    _input(
-                      hint: "Masukkan Email Anda",
-                      controller: emailController,
-                    ),
-
-                    _input(
-                      hint: "Masukkan Password Anda",
-                      controller: passwordController,
-                      obscure: !showPassword,
-                      suffix: IconButton(
-                        icon: Icon(
-                          showPassword
-                              ? Icons.visibility
-                              : Icons.visibility_off,
-                          color: Colors.white,
-                        ),
-                        onPressed: () => setState(
-                          () => showPassword = !showPassword,
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(
-                      height: 16,
-                    ),
-
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: loading
-                            ? null
-                            : loginEmail,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(
-                            0xFF0E2E72,
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 14,
-                          ),
-                        ),
-                        child: loading
-                            ? const CircularProgressIndicator(
-                                color: Colors.white,
-                              )
-                            : Text(
-                                "Sign In",
-                                style: GoogleFonts.poppins(
-                                  color: Colors.white,
-                                ),
-                              ),
-                      ),
-                    ),
-
-                    const SizedBox(
-                      height: 20,
-                    ),
-
-                    Row(
-                      children: [
-                        const Expanded(
-                          child: Divider(
-                            color: Colors.white,
-                          ),
-                        ),
-                        Text(
-                          "  atau  ",
-                          style: GoogleFonts.poppins(
-                            color: Colors.white,
-                          ),
-                        ),
-                        const Expanded(
-                          child: Divider(
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(
-                      height: 20,
-                    ),
-
-                    OutlinedButton.icon(
-                      onPressed: loading
-                          ? null
-                          : loginGoogle,
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(
-                          color: Colors.white,
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 12,
-                          horizontal: 16,
-                        ),
-                      ),
-                      icon: Image.asset(
-                        'assets/images/google_logo.png',
-                        height: 20,
-                      ),
-                      label: Text(
-                        "Masuk dengan Google",
-                        style: GoogleFonts.poppins(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(
-                      height: 20,
-                    ),
-
-                    Row(
+            child: SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 40,
+                ),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: MediaQuery.of(
+                      context,
+                    ).size.height,
+                  ),
+                  child: IntrinsicHeight(
+                    child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          "Anda belum punya akun? ",
-                          style: GoogleFonts.poppins(
-                            color: Colors.white70,
+                        CircleAvatar(
+                          radius: 65,
+                          backgroundColor: const Color(
+                            0xFF002F6C,
+                          ),
+                          child: Image.asset(
+                            'assets/images/bisaa.png',
+                            height: 60,
                           ),
                         ),
-                        GestureDetector(
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder:
-                                  (
-                                    _,
-                                  ) => const RegisterPage(),
+                        const SizedBox(
+                          height: 40,
+                        ),
+
+                        Text(
+                          "Masuk",
+                          style: GoogleFonts.poppins(
+                            fontSize: 22,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 25,
+                        ),
+
+                        _input(
+                          hint: "Masukkan Email Anda",
+                          controller: emailController,
+                        ),
+
+                        _input(
+                          hint: "Masukkan Password Anda",
+                          controller: passwordController,
+                          obscure: !showPassword,
+                          suffix: IconButton(
+                            icon: Icon(
+                              showPassword
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
+                              color: Colors.white,
+                            ),
+                            onPressed: () => setState(
+                              () {
+                                showPassword = !showPassword;
+                              },
                             ),
                           ),
-                          child: Text(
-                            "Daftar",
+                        ),
+
+                        const SizedBox(
+                          height: 16,
+                        ),
+
+                        // SIGN IN BUTTON (tanpa loading)
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: loading
+                                ? null
+                                : loginEmail,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(
+                                0xFF0E2E72,
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 14,
+                              ),
+                            ),
+                            child: Text(
+                              "Sign In",
+                              style: GoogleFonts.poppins(
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(
+                          height: 20,
+                        ),
+
+                        Row(
+                          children: [
+                            const Expanded(
+                              child: Divider(
+                                color: Colors.white,
+                              ),
+                            ),
+                            Text(
+                              "  atau  ",
+                              style: GoogleFonts.poppins(
+                                color: Colors.white,
+                              ),
+                            ),
+                            const Expanded(
+                              child: Divider(
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(
+                          height: 20,
+                        ),
+
+                        OutlinedButton.icon(
+                          onPressed: loading
+                              ? null
+                              : loginGoogle,
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(
+                              color: Colors.white,
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 12,
+                              horizontal: 16,
+                            ),
+                          ),
+                          icon: Image.asset(
+                            'assets/images/google_logo.png',
+                            height: 20,
+                          ),
+                          label: Text(
+                            "Masuk dengan Google",
                             style: GoogleFonts.poppins(
                               color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              decoration: TextDecoration.underline,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
+                        ),
+
+                        const SizedBox(
+                          height: 20,
+                        ),
+
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              "Anda belum punya akun? ",
+                              style: GoogleFonts.poppins(
+                                color: Colors.white70,
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:
+                                        (
+                                          _,
+                                        ) => const RegisterPage(),
+                                  ),
+                                );
+                              },
+                              child: Text(
+                                "Daftar",
+                                style: GoogleFonts.poppins(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
+
+          // ================= OVERLAY LOADING =================
+          if (loading)
+            Container(
+              width: double.infinity,
+              height: double.infinity,
+              color: Colors.black54,
+              child: const Center(
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

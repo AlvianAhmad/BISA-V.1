@@ -97,7 +97,6 @@ class _DashboardUserState
         0xFFF4F7FF,
       ),
       body: _pages[_selectedIndex],
-
       bottomNavigationBar: ConvexAppBar(
         backgroundColor: const Color(
           0xFF002F6C,
@@ -127,7 +126,7 @@ class _DashboardUserState
         initialActiveIndex: 0,
         onTap:
             (
-              int index,
+              index,
             ) {
               setState(
                 () => _selectedIndex = index,
@@ -140,14 +139,45 @@ class _DashboardUserState
 
 class _BerandaPage
     extends
-        StatelessWidget {
+        StatefulWidget {
   final bool isDarkMode;
   final VoidCallback onToggleTheme;
+
   const _BerandaPage({
     super.key,
     required this.isDarkMode,
     required this.onToggleTheme,
   });
+
+  @override
+  State<
+    _BerandaPage
+  >
+  createState() => _BerandaPageState();
+}
+
+class _BerandaPageState
+    extends
+        State<
+          _BerandaPage
+        > {
+  String userName = "Loading...";
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Ambil nama user dari Firebase Auth
+    final user = FirebaseAuth.instance.currentUser;
+
+    setState(
+      () {
+        userName =
+            user?.displayName ??
+            "User";
+      },
+    );
+  }
 
   @override
   Widget build(
@@ -179,7 +209,7 @@ class _BerandaPage
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Nama User",
+                  userName, // ⬅ Nama user otomatis
                   style: GoogleFonts.poppins(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
@@ -199,7 +229,6 @@ class _BerandaPage
             ),
           ],
         ),
-
         actions: [
           Builder(
             builder:
@@ -227,7 +256,6 @@ class _BerandaPage
           horizontal: 20,
           vertical: 20,
         ),
-
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -267,7 +295,6 @@ class _BerandaPage
                   ),
                 ],
               ),
-
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
@@ -369,10 +396,9 @@ class _BerandaPage
     );
   }
 
-  // ====================================================
-  // =============== Fungsi Drawer ======================
-  // ====================================================
-
+  // ============================
+  // Drawer Pengaturan
+  // ============================
   Drawer _buildSettingsDrawer(
     BuildContext context,
   ) {
@@ -437,23 +463,23 @@ class _BerandaPage
 
           ListTile(
             leading: Icon(
-              isDarkMode
+              widget.isDarkMode
                   ? LucideIcons.moon
                   : LucideIcons.sunMedium,
               color: Colors.indigo,
             ),
             title: Text(
-              isDarkMode
+              widget.isDarkMode
                   ? "Mode Gelap"
                   : "Mode Terang",
               style: GoogleFonts.poppins(),
             ),
             trailing: Switch(
-              value: isDarkMode,
+              value: widget.isDarkMode,
               onChanged:
                   (
                     val,
-                  ) => onToggleTheme(),
+                  ) => widget.onToggleTheme(),
             ),
           ),
 
@@ -502,6 +528,9 @@ class _BerandaPage
     );
   }
 
+  // ============================
+  // Widgets item
+  // ============================
   static Widget _buildStatItem(
     String value,
     String label,
@@ -554,13 +583,11 @@ class _BerandaPage
           ),
         ],
       ),
-
       child: InkWell(
         borderRadius: BorderRadius.circular(
           20,
         ),
         onTap: () {},
-
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -580,11 +607,9 @@ class _BerandaPage
                 size: 26,
               ),
             ),
-
             const SizedBox(
               height: 10,
             ),
-
             Text(
               title,
               style: GoogleFonts.poppins(
