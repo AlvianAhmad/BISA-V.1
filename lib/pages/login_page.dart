@@ -5,29 +5,19 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../services/auth_service.dart';
 import 'register_page.dart';
+import 'welcome_page.dart';
 import 'admin/dashboard_admin.dart';
 import 'teachers/dashboard_teacher.dart';
 import 'users/dashboard_user.dart';
 
-class LoginPage
-    extends
-        StatefulWidget {
-  const LoginPage({
-    super.key,
-  });
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
 
   @override
-  State<
-    LoginPage
-  >
-  createState() => _LoginPageState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState
-    extends
-        State<
-          LoginPage
-        > {
+class _LoginPageState extends State<LoginPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final _authService = AuthService();
@@ -39,63 +29,34 @@ class _LoginPageState
   // ======================== Snackbars ===========================
   // ==============================================================
 
-  void showError(
-    String message,
-  ) {
-    _showSnack(
-      message,
-      Colors.redAccent.shade700,
-      Icons.error_outline,
-    );
+  void showError(String message) {
+    _showSnack(message, Colors.redAccent.shade700, Icons.error_outline);
   }
 
-  void showSuccess(
-    String message,
-  ) {
-    _showSnack(
-      message,
-      Colors.green.shade700,
-      Icons.check_circle_outline,
-    );
+  void showSuccess(String message) {
+    _showSnack(message, Colors.green.shade700, Icons.check_circle_outline);
   }
 
-  void _showSnack(
-    String message,
-    Color color,
-    IconData icon,
-  ) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(
+  void _showSnack(String message, Color color, IconData icon) {
+    ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         behavior: SnackBarBehavior.floating,
         backgroundColor: Colors.transparent,
         elevation: 0,
         content: Container(
-          padding: const EdgeInsets.all(
-            14,
-          ),
+          padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: color,
-            borderRadius: BorderRadius.circular(
-              12,
-            ),
+            borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
             children: [
-              Icon(
-                icon,
-                color: Colors.white,
-              ),
-              const SizedBox(
-                width: 12,
-              ),
+              Icon(icon, color: Colors.white),
+              const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   message,
-                  style: const TextStyle(
-                    color: Colors.white,
-                  ),
+                  style: const TextStyle(color: Colors.white),
                 ),
               ),
             ],
@@ -109,9 +70,7 @@ class _LoginPageState
   // ================== Firebase Error Handler ====================
   // ==============================================================
 
-  String firebaseError(
-    String code,
-  ) {
+  String firebaseError(String code) {
     switch (code) {
       case "invalid-email":
         return "Format email tidak valid.";
@@ -132,38 +91,23 @@ class _LoginPageState
   // =================== Redirect by Role =========================
   // ==============================================================
 
-  Future<
-    void
-  >
-  _redirectByRole(
-    String uid,
-  ) async {
+  Future<void> _redirectByRole(String uid) async {
     final userDoc = await FirebaseFirestore.instance
-        .collection(
-          'users',
-        )
-        .doc(
-          uid,
-        )
+        .collection('users')
+        .doc(uid)
         .get();
 
     if (!userDoc.exists) {
-      showError(
-        "User tidak ditemukan di database.",
-      );
+      showError("User tidak ditemukan di database.");
       return;
     }
 
-    final role =
-        userDoc['role'] ??
-        "user";
+    final role = userDoc['role'] ?? "user";
 
     Widget nextPage;
-    if (role ==
-        "admin") {
+    if (role == "admin") {
       nextPage = const AdminPage();
-    } else if (role ==
-        "teacher") {
+    } else if (role == "teacher") {
       nextPage = const TeacherPage();
     } else {
       nextPage = const DashboardUser();
@@ -171,12 +115,7 @@ class _LoginPageState
 
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(
-        builder:
-            (
-              _,
-            ) => nextPage,
-      ),
+      MaterialPageRoute(builder: (_) => nextPage),
     );
   }
 
@@ -184,76 +123,37 @@ class _LoginPageState
   // ====================== Login Email ===========================
   // ==============================================================
 
-  Future<
-    void
-  >
-  loginEmail() async {
+  Future<void> loginEmail() async {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
 
-    if (email.isEmpty)
-      return showError(
-        "Email tidak boleh kosong.",
-      );
-    if (password.isEmpty)
-      return showError(
-        "Password tidak boleh kosong.",
-      );
+    if (email.isEmpty) return showError("Email tidak boleh kosong.");
+    if (password.isEmpty) return showError("Password tidak boleh kosong.");
 
-    final emailRegex = RegExp(
-      r"^[^@]+@[^@]+\.[^@]+$",
-    );
-    if (!emailRegex.hasMatch(
-      email,
-    )) {
-      return showError(
-        "Format email tidak valid.",
-      );
+    final emailRegex = RegExp(r"^[^@]+@[^@]+\.[^@]+$");
+    if (!emailRegex.hasMatch(email)) {
+      return showError("Format email tidak valid.");
     }
 
-    setState(
-      () => loading = true,
-    );
+    setState(() => loading = true);
 
     try {
-      await _authService.loginWithEmail(
-        email: email,
-        password: password,
-      );
+      await _authService.loginWithEmail(email: email, password: password);
 
       final user = FirebaseAuth.instance.currentUser;
-      if (user ==
-          null) {
-        showError(
-          "Login gagal.",
-        );
+      if (user == null) {
+        showError("Login gagal.");
         return;
       }
 
-      showSuccess(
-        "Login berhasil!",
-      );
-      await _redirectByRole(
-        user.uid,
-      );
-    } on FirebaseAuthException catch (
-      e
-    ) {
-      showError(
-        firebaseError(
-          e.code,
-        ),
-      );
-    } catch (
-      _
-    ) {
-      showError(
-        "Terjadi kesalahan. Silakan coba lagi.",
-      );
+      showSuccess("Login berhasil!");
+      await _redirectByRole(user.uid);
+    } on FirebaseAuthException catch (e) {
+      showError(firebaseError(e.code));
+    } catch (_) {
+      showError("Terjadi kesalahan. Silakan coba lagi.");
     } finally {
-      setState(
-        () => loading = false,
-      );
+      setState(() => loading = false);
     }
   }
 
@@ -261,40 +161,19 @@ class _LoginPageState
   // ======================= Login Google =========================
   // ==============================================================
 
-  Future<
-    void
-  >
-  loginGoogle() async {
-    setState(
-      () => loading = true,
-    );
+  Future<void> loginGoogle() async {
+    setState(() => loading = true);
 
     try {
       final cred = await _authService.loginWithGoogle();
-      showSuccess(
-        "Berhasil masuk dengan Google!",
-      );
-      await _redirectByRole(
-        cred.user!.uid,
-      );
-    } on FirebaseAuthException catch (
-      e
-    ) {
-      showError(
-        firebaseError(
-          e.code,
-        ),
-      );
-    } catch (
-      _
-    ) {
-      showError(
-        "Gagal masuk dengan Google.",
-      );
+      showSuccess("Berhasil masuk dengan Google!");
+      await _redirectByRole(cred.user!.uid);
+    } on FirebaseAuthException catch (e) {
+      showError(firebaseError(e.code));
+    } catch (_) {
+      showError("Gagal masuk dengan Google.");
     } finally {
-      setState(
-        () => loading = false,
-      );
+      setState(() => loading = false);
     }
   }
 
@@ -309,29 +188,19 @@ class _LoginPageState
     Widget? suffix,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        vertical: 8,
-      ),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: TextField(
         controller: controller,
         obscureText: obscure,
-        style: const TextStyle(
-          color: Colors.white,
-        ),
+        style: const TextStyle(color: Colors.white),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: const TextStyle(
-            color: Colors.white70,
-          ),
+          hintStyle: const TextStyle(color: Colors.white70),
           filled: true,
-          fillColor: const Color(
-            0xFF204D9C,
-          ),
+          fillColor: const Color(0xFF204D9C),
           suffixIcon: suffix,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(
-              8,
-            ),
+            borderRadius: BorderRadius.circular(8),
             borderSide: BorderSide.none,
           ),
         ),
@@ -344,25 +213,15 @@ class _LoginPageState
   // ==============================================================
 
   @override
-  Widget build(
-    BuildContext context,
-  ) {
+  Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
         children: [
-          // ================= MAIN UI =================
           Container(
             width: double.infinity,
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [
-                  Color(
-                    0xFF89A7C2,
-                  ),
-                  Color(
-                    0xFF1E3C72,
-                  ),
-                ],
+                colors: [Color(0xFF89A7C2), Color(0xFF1E3C72)],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
@@ -371,31 +230,48 @@ class _LoginPageState
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
-                  vertical: 40,
+                  vertical: 20,
                 ),
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
-                    minHeight: MediaQuery.of(
-                      context,
-                    ).size.height,
+                    minHeight: MediaQuery.of(context).size.height,
                   ),
                   child: IntrinsicHeight(
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
+                        // ====================================================
+                        // ================ TOMBOL BACK =======================
+                        // ====================================================
+                        Align(
+                          alignment: Alignment.topLeft,
+                          child: IconButton(
+                            icon: const Icon(
+                              Icons.arrow_back,
+                              color: Colors.white,
+                            ),
+                            onPressed: () {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const WelcomePage(),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+
+                        const SizedBox(height: 10),
+
                         CircleAvatar(
                           radius: 65,
-                          backgroundColor: const Color(
-                            0xFF002F6C,
-                          ),
+                          backgroundColor: const Color(0xFF002F6C),
                           child: Image.asset(
                             'assets/images/bisaa.png',
                             height: 60,
                           ),
                         ),
-                        const SizedBox(
-                          height: 40,
-                        ),
+
+                        const SizedBox(height: 40),
 
                         Text(
                           "Masuk",
@@ -405,9 +281,8 @@ class _LoginPageState
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        const SizedBox(
-                          height: 25,
-                        ),
+
+                        const SizedBox(height: 25),
 
                         _input(
                           hint: "Masukkan Email Anda",
@@ -425,79 +300,48 @@ class _LoginPageState
                                   : Icons.visibility_off,
                               color: Colors.white,
                             ),
-                            onPressed: () => setState(
-                              () {
-                                showPassword = !showPassword;
-                              },
-                            ),
+                            onPressed: () {
+                              setState(() => showPassword = !showPassword);
+                            },
                           ),
                         ),
 
-                        const SizedBox(
-                          height: 16,
-                        ),
+                        const SizedBox(height: 16),
 
-                        // SIGN IN BUTTON (tanpa loading)
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
-                            onPressed: loading
-                                ? null
-                                : loginEmail,
+                            onPressed: loading ? null : loginEmail,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(
-                                0xFF0E2E72,
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 14,
-                              ),
+                              backgroundColor: const Color(0xFF0E2E72),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
                             ),
                             child: Text(
                               "Sign In",
-                              style: GoogleFonts.poppins(
-                                color: Colors.white,
-                              ),
+                              style: GoogleFonts.poppins(color: Colors.white),
                             ),
                           ),
                         ),
 
-                        const SizedBox(
-                          height: 20,
-                        ),
+                        const SizedBox(height: 20),
 
                         Row(
                           children: [
-                            const Expanded(
-                              child: Divider(
-                                color: Colors.white,
-                              ),
-                            ),
+                            const Expanded(child: Divider(color: Colors.white)),
                             Text(
                               "  atau  ",
-                              style: GoogleFonts.poppins(
-                                color: Colors.white,
-                              ),
+                              style: GoogleFonts.poppins(color: Colors.white),
                             ),
-                            const Expanded(
-                              child: Divider(
-                                color: Colors.white,
-                              ),
-                            ),
+                            const Expanded(child: Divider(color: Colors.white)),
                           ],
                         ),
 
-                        const SizedBox(
-                          height: 20,
-                        ),
+                        const SizedBox(height: 20),
 
                         OutlinedButton.icon(
-                          onPressed: loading
-                              ? null
-                              : loginGoogle,
+                          onPressed: loading ? null : loginGoogle,
                           style: OutlinedButton.styleFrom(
-                            side: const BorderSide(
-                              color: Colors.white,
-                            ),
+                            side: const BorderSide(color: Colors.white),
                             padding: const EdgeInsets.symmetric(
                               vertical: 12,
                               horizontal: 16,
@@ -516,28 +360,21 @@ class _LoginPageState
                           ),
                         ),
 
-                        const SizedBox(
-                          height: 20,
-                        ),
+                        const SizedBox(height: 20),
 
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
                               "Anda belum punya akun? ",
-                              style: GoogleFonts.poppins(
-                                color: Colors.white70,
-                              ),
+                              style: GoogleFonts.poppins(color: Colors.white70),
                             ),
                             GestureDetector(
                               onTap: () {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder:
-                                        (
-                                          _,
-                                        ) => const RegisterPage(),
+                                    builder: (_) => const RegisterPage(),
                                   ),
                                 );
                               },
@@ -560,16 +397,13 @@ class _LoginPageState
             ),
           ),
 
-          // ================= OVERLAY LOADING =================
           if (loading)
             Container(
               width: double.infinity,
               height: double.infinity,
               color: Colors.black54,
               child: const Center(
-                child: CircularProgressIndicator(
-                  color: Colors.white,
-                ),
+                child: CircularProgressIndicator(color: Colors.white),
               ),
             ),
         ],
