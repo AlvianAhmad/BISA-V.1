@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'widgets/custom_appbar.dart';
 import 'widgets/custom_drawer.dart';
+import 'tambah_kursus_page.dart';
 
 class KursusPage
     extends
@@ -102,7 +103,33 @@ class _KursusPageState
                 ),
 
                 GestureDetector(
-                  onTap: () {},
+                  onTap: () async {
+                    final newCourse = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (
+                              context,
+                            ) => TambahKursusPage(
+                              isDarkMode: widget.isDarkMode,
+                              onToggleTheme: widget.onToggleTheme,
+                              userName: widget.userName,
+                            ),
+                      ),
+                    );
+
+                    if (newCourse !=
+                        null) {
+                      setState(
+                        () {
+                          courseData.add(
+                            newCourse,
+                          );
+                        },
+                      );
+                    }
+                  },
+
                   child: Container(
                     width: 30,
                     height: 30,
@@ -139,7 +166,7 @@ class _KursusPageState
                   14,
                 ),
                 border: Border.all(
-                  color: Colors.grey.shade300, // OUTLINE BORDER
+                  color: Colors.grey.shade300,
                   width: 1.2,
                 ),
               ),
