@@ -1,34 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'widgets/custom_appbar.dart';
-import 'widgets/custom_drawer.dart';
-import 'tambah_kursus_page.dart';
 
-class KursusPage
+import 'tambah_kursus_page.dart'; // berisi TambahKursusForm
+
+class KursusTabContent
     extends
         StatefulWidget {
-  final bool isDarkMode;
-  final VoidCallback onToggleTheme;
-  final String userName;
-
-  const KursusPage({
+  const KursusTabContent({
     super.key,
-    required this.isDarkMode,
-    required this.onToggleTheme,
-    required this.userName,
   });
 
   @override
   State<
-    KursusPage
+    KursusTabContent
   >
-  createState() => _KursusPageState();
+  createState() => _KursusTabContentState();
 }
 
-class _KursusPageState
+class _KursusTabContentState
     extends
         State<
-          KursusPage
+          KursusTabContent
         > {
   final List<
     Map<
@@ -64,169 +56,170 @@ class _KursusPageState
   Widget build(
     BuildContext context,
   ) {
-    return Scaffold(
-      backgroundColor: const Color(
-        0xFFF4F7FF,
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(
+        20,
       ),
-
-      drawer: CustomSettingsDrawer(
-        isDarkMode: widget.isDarkMode,
-        onToggleTheme: widget.onToggleTheme,
-      ),
-
-      appBar: CustomUserAppBar(
-        userName: widget.userName,
-      ),
-
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(
-          20,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // =====================================================
-            // HEADER KURSUS + TOMBOL +
-            // =====================================================
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  "Kursus Saya",
-                  style: GoogleFonts.poppins(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(
-                      0xFF002F6C,
-                    ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // HEADER + TOMBBOL TAMBAH
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Kursus Saya",
+                style: GoogleFonts.poppins(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(
+                    0xFF002F6C,
                   ),
                 ),
-
-                GestureDetector(
-                  onTap: () async {
-                    final newCourse = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
+              ),
+              GestureDetector(
+                onTap: () async {
+                  // sekarang yang diterima: LIST kursus, bukan 1 kursus
+                  final newCourses =
+                      await showModalBottomSheet<
+                        List<
+                          Map<
+                            String,
+                            dynamic
+                          >
+                        >
+                      >(
+                        context: context,
+                        isScrollControlled: true,
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.vertical(
+                            top: Radius.circular(
+                              20,
+                            ),
+                          ),
+                        ),
                         builder:
                             (
                               context,
-                            ) => TambahKursusPage(
-                              isDarkMode: widget.isDarkMode,
-                              onToggleTheme: widget.onToggleTheme,
-                              userName: widget.userName,
-                            ),
-                      ),
-                    );
-
-                    if (newCourse !=
-                        null) {
-                      setState(
-                        () {
-                          courseData.add(
-                            newCourse,
-                          );
-                        },
+                            ) {
+                              return Padding(
+                                padding: EdgeInsets.only(
+                                  left: 20,
+                                  right: 20,
+                                  top: 20,
+                                  bottom:
+                                      MediaQuery.of(
+                                        context,
+                                      ).viewInsets.bottom +
+                                      20,
+                                ),
+                                child: const TambahKursusForm(),
+                              );
+                            },
                       );
-                    }
-                  },
 
-                  child: Container(
-                    width: 30,
-                    height: 30,
-                    decoration: const BoxDecoration(
-                      color: Color(
-                        0xFF002F6C,
-                      ),
-                      shape: BoxShape.circle,
+                  if (newCourses !=
+                          null &&
+                      newCourses.isNotEmpty) {
+                    setState(
+                      () {
+                        courseData.addAll(
+                          newCourses,
+                        ); // ⬅️ tambahkan SEMUA kursus hasil enroll
+                      },
+                    );
+                  }
+                },
+
+                child: Container(
+                  width: 30,
+                  height: 30,
+                  decoration: const BoxDecoration(
+                    color: Color(
+                      0xFF002F6C,
                     ),
-                    child: const Icon(
-                      Icons.add,
-                      color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.add,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(
+            height: 20,
+          ),
+
+          // SEARCH BAR
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16,
+            ),
+            height: 50,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(
+                14,
+              ),
+              border: Border.all(
+                color: Colors.grey.shade300,
+                width: 1.2,
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.search,
+                  color: Colors.grey,
+                ),
+                const SizedBox(
+                  width: 10,
+                ),
+                Expanded(
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: "Cari Kursus...",
+                      hintStyle: GoogleFonts.poppins(
+                        color: Colors.grey.shade500,
+                        fontSize: 14,
+                      ),
+                      border: InputBorder.none,
                     ),
                   ),
                 ),
               ],
             ),
+          ),
 
-            const SizedBox(
-              height: 20,
-            ),
+          const SizedBox(
+            height: 25,
+          ),
 
-            // =====================================================
-            // SEARCH BAR DENGAN OUTLINE
-            // =====================================================
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16,
-              ),
-              height: 50,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(
-                  14,
-                ),
-                border: Border.all(
-                  color: Colors.grey.shade300,
-                  width: 1.2,
-                ),
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.search,
-                    color: Colors.grey,
-                  ),
-                  const SizedBox(
-                    width: 10,
-                  ),
-                  Expanded(
-                    child: TextField(
-                      decoration: InputDecoration(
-                        hintText: "Cari Kursus...",
-                        hintStyle: GoogleFonts.poppins(
-                          color: Colors.grey.shade500,
-                          fontSize: 14,
-                        ),
-                        border: InputBorder.none,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(
-              height: 25,
-            ),
-
-            // =====================================================
-            // CARD KURSUS
-            // =====================================================
-            Column(
-              children: courseData.map(
-                (
-                  course,
-                ) {
-                  return Padding(
+          // LIST KARTU KURSUS
+          Column(
+            children: courseData
+                .map(
+                  (
+                    course,
+                  ) => Padding(
                     padding: const EdgeInsets.only(
                       bottom: 20,
                     ),
                     child: _buildCourseCard(
                       course,
                     ),
-                  );
-                },
-              ).toList(),
-            ),
-          ],
-        ),
+                  ),
+                )
+                .toList(),
+          ),
+        ],
       ),
     );
   }
 
-  // =============================================================
-  // COURSE CARD
-  // =============================================================
   Widget _buildCourseCard(
     Map<
       String,
@@ -272,7 +265,6 @@ class _KursusPageState
               fit: BoxFit.cover,
             ),
           ),
-
           Padding(
             padding: const EdgeInsets.all(
               18,
@@ -290,11 +282,9 @@ class _KursusPageState
                     ),
                   ),
                 ),
-
                 const SizedBox(
                   height: 4,
                 ),
-
                 Text(
                   course["lecturer"],
                   style: GoogleFonts.poppins(
@@ -302,11 +292,9 @@ class _KursusPageState
                     color: Colors.grey.shade700,
                   ),
                 ),
-
                 const SizedBox(
                   height: 10,
                 ),
-
                 Row(
                   children: [
                     const Icon(
@@ -326,11 +314,9 @@ class _KursusPageState
                     ),
                   ],
                 ),
-
                 const SizedBox(
                   height: 20,
                 ),
-
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -355,11 +341,9 @@ class _KursusPageState
                     ),
                   ],
                 ),
-
                 const SizedBox(
                   height: 8,
                 ),
-
                 ClipRRect(
                   borderRadius: BorderRadius.circular(
                     6,
