@@ -6,6 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/auth_service.dart';
 import 'register_page.dart';
 import 'welcome_page.dart';
+import 'forgot_password_page.dart';
 import 'admin/dashboard_admin.dart';
 import 'teachers/dashboard_teacher.dart';
 import 'users/dashboard_user.dart';
@@ -239,9 +240,6 @@ class _LoginPageState extends State<LoginPage> {
                   child: IntrinsicHeight(
                     child: Column(
                       children: [
-                        // ====================================================
-                        // ================ TOMBOL BACK =======================
-                        // ====================================================
                         Align(
                           alignment: Alignment.topLeft,
                           child: IconButton(
@@ -303,6 +301,34 @@ class _LoginPageState extends State<LoginPage> {
                             onPressed: () {
                               setState(() => showPassword = !showPassword);
                             },
+                          ),
+                        ),
+
+                        // ============================
+                        //  LINK LUPA PASSWORD
+                        // ============================
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const ForgotPasswordPage(),
+                                ),
+                              );
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text(
+                                "Lupa Password?",
+                                style: GoogleFonts.poppins(
+                                  color: Colors.white,
+                                  decoration: TextDecoration.underline,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
 
@@ -382,8 +408,8 @@ class _LoginPageState extends State<LoginPage> {
                                 "Daftar",
                                 style: GoogleFonts.poppins(
                                   color: Colors.white,
-                                  fontWeight: FontWeight.bold,
                                   decoration: TextDecoration.underline,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ),
